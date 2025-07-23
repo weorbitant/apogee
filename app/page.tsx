@@ -16,7 +16,7 @@ export default function Home() {
         />
         <div className="text-xs sm:text-base text-center font-[family-name:var(--font-geist-mono)] max-w-prose mt-2">
           <p className="mb-8 text-bold italic text-[#17ae8e] bg-gray-800 p-1 rounded-md">
-            Orbit Higher Together, One Meter at a Time.
+            Orbiting Higher Together, One Meter at a Time.
           </p>
           <strong>Apogee</strong>, the ultimate karma bot for Orbiters. Designed
           to boost teamwork and reward positive contributions, Apogee lets users
