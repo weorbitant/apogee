@@ -67,6 +67,14 @@ npx localtunnel --port 3000
 
 Make sure to modify the [subscription URL](./README.md/#enable-slack-events) to the `localtunnel` URL.
 
+### DB Migrations apply (Prisma + Turso)
+
+```sh
+turso auth login
+
+turso db shell apogee-bot-dev < ./prisma/migrations/20241024201506_init/migration.sql
+```
+
 ### Acknowledgements & useful links
 
 - [Christopher-Hayes](https://gist.github.com/Christopher-Hayes/684ab3a73e0e8945384d4742e6547693)
