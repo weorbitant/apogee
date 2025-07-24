@@ -75,4 +75,34 @@ describe('processMessage', () => {
       affectedUsers: [],
     })
   })
+
+  it('should process a message of a user <@grattitude-dev> +++ and should not store karma and send slack messages correctly', async () => {
+    await processMessage({
+      channel: 'C123',
+      text: '<@grattitude-dev> +++',
+      user: 'USER11111',
+    })
+    // check storekarma and sendSlackMessages were called
+    expect(storeKarma).toHaveBeenCalled()
+    expect(sendSlackMessages).toHaveBeenCalled()
+    // check parameters send correctly
+    expect(storeKarma).toHaveBeenCalledWith([
+     {
+       "amount": 2,
+       "fromUser": "<@USER11111>",
+       "message": "<@grattitude-dev> +++",
+       "timestamp": expect.any(Date),
+       "toUser": "<@grattitude-dev>",
+     },
+   ])
+    expect(sendSlackMessages).toHaveBeenCalledWith({
+      channel: 'C123',
+      fromUser: '<@USER11111>',
+      canGiveKarma: true,
+      canTakeKarma: true,
+      givenKarmasToHimself: false,
+      takenKarmasFromHimself: false,
+      affectedUsers: [],
+    })
+  })
 })
