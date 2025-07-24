@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getTotalKarmaToGive, getTotalKarmaToTake, Transaction } from '../../../app/_lib/_process/helpers'
+import { getTotalKarmaToGive, getTotalKarmaToTake, type Transaction } from '@/app/_lib/_process/helpers'
 
 describe('getTotalKarmaToGive', () => {
   it('should return the total karma to give', () => {

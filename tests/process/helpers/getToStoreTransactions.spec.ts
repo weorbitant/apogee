@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getToStoreTransactions, type Transaction } from '../../../app/_lib/_process/helpers'
+import { getToStoreTransactions, type Transaction } from '@/app/_lib/_process/helpers'
 
 describe('getToStoreTransactions', () => {
   it('should return the transactions that are positive', () => {

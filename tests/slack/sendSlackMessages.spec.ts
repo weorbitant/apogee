@@ -17,7 +17,7 @@ vi.mock('@slack/web-api', () => {
   }
 })
 
-import { sendSlackMessages } from '../../app/_lib/_slack'
+import { sendSlackMessages } from '@/app/_lib/_slack'
 const { mockPostMessage } = await vi.importMock('@slack/web-api')
 
 describe('sendSlackMessages', () => {

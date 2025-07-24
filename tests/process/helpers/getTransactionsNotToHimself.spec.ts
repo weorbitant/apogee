@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getTransactionsNotToHimself, type Transaction } from '../../../app/_lib/_process/helpers'
+import { getTransactionsNotToHimself, type Transaction } from '@/app/_lib/_process/helpers'
 
 describe('getTransactionsNotToHimself', () => {
   it('should return the transactions that are not to the user himself', () => {

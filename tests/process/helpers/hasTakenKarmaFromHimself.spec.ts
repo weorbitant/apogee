@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { hasTakenKarmaFromHimself, type Transaction } from '../../../app/_lib/_process/helpers'
+import { hasTakenKarmaFromHimself, type Transaction } from '@/app/_lib/_process/helpers'
 
 describe('hasTakenKarmaFromHimself', () => {
   it('should return true if the user has taken karma from himself', () => {

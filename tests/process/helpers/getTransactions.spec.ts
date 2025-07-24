@@ -1,4 +1,4 @@
-import { getTransactions, Transaction } from '../../../app/_lib/_process/helpers'
+import { getTransactions, type Transaction } from '@/app/_lib/_process/helpers'
 import { describe, it, expect } from 'vitest'
 
 describe('getTransactions', () => {
