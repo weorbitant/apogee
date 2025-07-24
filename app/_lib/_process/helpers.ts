@@ -14,7 +14,7 @@ export function getTransactions(
 ) {
   const transactions: Transaction[] = karmaRelatedMatches.map((match) => {
     // Extract the user ID
-    const toUser = match.match(/<@U[A-Z0-9]{8,}>/)![0]
+    const toUser = match.match(/<@[^>]+>/)![0]
     // Extract the karma points
     const karmaString = match.match(/(\+{2,}|-{2,})/)![0]
     // Extract the karma amount (positive or negative)
