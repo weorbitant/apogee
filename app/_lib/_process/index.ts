@@ -28,7 +28,6 @@ const REGEX = /<@[^>]+> (\+{2,}|-{2,})/g
 const LIMIT = 50
 
 export async function processMessage(event: Event) {
-  // TODO @gratitude-dev -- doesn't work
   // TODO remove this logs
   console.log('event', event)
   const { channel, text, user } = event
