@@ -75,6 +75,15 @@ turso auth login
 turso db shell apogee-bot-dev < ./prisma/migrations/20241024201506_init/migration.sql
 ```
 
+### Running Tests
+
+This project uses [Vitest](https://vitest.dev/) for testing. To run the test suite, use:
+
+```sh
+npm test
+```
+
+
 ### Acknowledgements & useful links
 
 - [Christopher-Hayes](https://gist.github.com/Christopher-Hayes/684ab3a73e0e8945384d4742e6547693)
