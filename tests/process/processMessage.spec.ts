@@ -161,4 +161,13 @@ describe('processMessage', () => {
       affectedUsers: [],
     })
   })
+
+  it('should throw exception when storeKarma fails', async () => {
+    vi.mocked(storeKarma).mockRejectedValueOnce(new Error('Failed to store karma'))
+    await expect(processMessage({
+      channel: 'C123',
+      text: '<@USER11111> +++',
+      user: 'USER22222',
+    })).rejects.toThrow('Failed to store karma')
+  })
 })
