@@ -21,11 +21,13 @@ type Event = {
   user: string
 }
 
-const REGEX = /<@U[A-Z0-9]{8,}> (\+{2,}|-{2,})/g
+// Examples of matching strings:
+//  "<@U12345678> ++"
+//  "<@grattitude-dev> ---"
+const REGEX = /<@[^>]+> (\+{2,}|-{2,})/g
 const LIMIT = 50
 
 export async function processMessage(event: Event) {
-  // TODO @gratitude-dev -- doesn't work
   // TODO remove this logs
   console.log('event', event)
   const { channel, text, user } = event
