@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma migrate deploy && next build",
+    "migrations": "prisma generate && prisma migrate deploy",
+    "build": "npm run migrations && next build",
     "start": "next start",
     "test": "vitest",
     "test:ci": "vitest run",
