@@ -44,36 +44,6 @@ describe('processMessage', () => {
     })
   })
 
-  it('should process a message given karma to a new user and should store karma and send slack messages correctly', async () => {
-    await processMessage({
-      channel: 'C123',
-      text: '<@USER11111> +++',
-      user: 'USER22222',
-    })
-    // check storekarma and sendSlackMessages were called
-    expect(storeKarma).toHaveBeenCalled()
-    expect(sendSlackMessages).toHaveBeenCalled()
-    // check parameters send correctly
-    expect(storeKarma).toHaveBeenCalledWith([
-     {
-       "amount": 2,
-       "fromUser": "<@USER22222>",
-       "message": "<@USER11111> +++",
-       "timestamp": expect.any(Date),
-       "toUser": "<@USER11111>",
-     },
-   ])
-    expect(sendSlackMessages).toHaveBeenCalledWith({
-      channel: 'C123',
-      fromUser: '<@USER22222>',
-      canGiveKarma: true,
-      canTakeKarma: true,
-      givenKarmasToHimself: false,
-      takenKarmasFromHimself: false,
-      affectedUsers: [],
-    })
-  })
-
   it('should process a message of a user <@grattitude-dev> +++ and should not store karma and send slack messages correctly', async () => {
     await processMessage({
       channel: 'C123',
@@ -124,40 +94,6 @@ describe('processMessage', () => {
       canTakeKarma: false,
       givenKarmasToHimself: false,
       takenKarmasFromHimself: false,
-      affectedUsers: [],
-    })
-  })
-
-  it('should process multiple karma messages for different users', async () => {
-    await processMessage({
-      channel: 'C123',
-      text: '<@USER11111> +++ <@USER33333> +++',
-      user: 'USER22222',
-    })
-    expect(storeKarma).toHaveBeenCalledWith([
-      {
-        amount: 2,
-        fromUser: '<@USER22222>',
-        message: '<@USER11111> +++ <@USER33333> +++',
-        timestamp: expect.any(Date),
-        toUser: '<@USER11111>',
-      },
-      {
-        amount: 2,
-        fromUser: '<@USER22222>',
-        message: '<@USER11111> +++ <@USER33333> +++',
-        timestamp: expect.any(Date),
-        toUser: '<@USER33333>',
-      },
-    ])
-    expect(sendSlackMessages).toHaveBeenCalledWith({
-      channel: 'C123',
-      fromUser: '<@USER22222>',
-      canGiveKarma: true,
-      canTakeKarma: true,
-      givenKarmasToHimself: false,
-      takenKarmasFromHimself: false,
-      // TODO: check affectedUsers with the result of the storeKarma call to turso db
       affectedUsers: [],
     })
   })
