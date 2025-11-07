@@ -20,6 +20,7 @@ export default defineConfig({
         '**/package-lock.json',
         '**/next.config.ts',
         '**/vitest.config.ts',
+        '**/*.tsx',
       ],
       // Coverage thresholds (optional - you can adjust these)
       thresholds: {

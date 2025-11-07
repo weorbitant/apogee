@@ -32,9 +32,7 @@ async function processRequest(request: Request, rawBody: string) {
   // process message
   const body = JSON.parse(rawBody)
   const requestType = body.type
-
   const isValidSlackReq = await isValidSlackRequest(request, rawBody)
-  console.log('isValidSlackReq', isValidSlackReq)
 
   if (isValidSlackReq && requestType === 'event_callback') {
     const event = body.event

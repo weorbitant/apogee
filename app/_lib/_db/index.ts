@@ -10,7 +10,7 @@ const libsql = createClient({
 })
 
 const adapter = new PrismaLibSQL(libsql)
-const prisma = new PrismaClient({ adapter })
+export const prisma = new PrismaClient({ adapter })
 
 export async function getGivenKarmaLast2Weeks(user: string) {
   const givenKarmaLast2Weeks = await prisma.transaction.aggregate({
