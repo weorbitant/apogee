@@ -45,7 +45,7 @@ export async function getTakenKarmaLast2Weeks(user: string) {
 }
 
 export async function storeKarma(
-  transactions: Omit<Transaction, 'uuid' | 'total'>[]
+  transactions: Omit<Transaction, 'uuid' | 'total' | 'fromUserId' | 'toUserId'>[]
 ) {
   const affectedUsers = []
 
