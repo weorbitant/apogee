@@ -16,7 +16,7 @@ datasource db {
 
 model User {
   id           String   @id @default(uuid()) // Our own UUID
-  providerId   String   // Slack user ID like "U096G3T569M"
+  providerId   String   // Slack user ID like "W012A3CDE"
   username     String   // Slack username like "kevin.martinez"
   displayName  String   // Display name like "Kevin Martínez"
   realName     String?  // Real name like "Kevin Martínez"

@@ -9,11 +9,12 @@ import {
   getToStoreTransactions,
 } from '@/app/_lib/_process/helpers'
 import {
+  createUserIfNotExists,
   getGivenKarmaLast2Weeks,
   getTakenKarmaLast2Weeks,
   storeKarma,
 } from '@/app/_lib/_db/index'
-import { sendSlackMessages } from '@/app/_lib/_slack'
+import { getUserInfo, sendSlackMessages } from '@/app/_lib/_slack'
 
 type Event = {
   channel: string
@@ -29,7 +30,6 @@ const LIMIT = 50
 
 export async function processMessage(event: Event) {
   // TODO remove this logs
-  console.log('event', event)
   const { channel, text, user } = event
   const now = new Date()
   const fromUser = `<@${user}>`
@@ -39,9 +39,6 @@ export async function processMessage(event: Event) {
     const karmaRelatedMatches = [...text.matchAll(REGEX)].map(
       (match) => match[0]
     )
-    // TODO remove this logs
-    console.log('text', text)
-    console.log('karmaRelatedMatches', karmaRelatedMatches)
 
     if (karmaRelatedMatches.length > 0) {
       const transactions: Transaction[] = getTransactions(
@@ -79,6 +76,26 @@ export async function processMessage(event: Event) {
         canGiveKarma,
         canTakeKarma
       )
+      const fromUsers = validTransactions.map(transaction => transaction.fromUser.replace('<@', '').replace('>', '').trim())
+      const toUsers = validTransactions.map(transaction => transaction.toUser.replace('<@', '').replace('>', '').trim())
+      const users = [...new Set([...fromUsers, ...toUsers])]
+      for (let userToStore of users) {
+        const userInfo = await getUserInfo(userToStore)
+        console.log('userInfo', userInfo);
+        
+        if (userInfo && userInfo.id) {
+          const profile = userInfo.profile ?? {}
+          await createUserIfNotExists('slack', userInfo.id, {
+            username: userInfo.name ?? '',
+            displayName: profile.display_name ?? '',
+            realName: profile.real_name ?? '',
+            avatarUrl: profile.image_original ?? '',
+            timezone: userInfo.tz,
+            isBot: userInfo.is_bot,
+            isActive: true,
+          })
+        }
+      }
       const affectedUsers = await storeKarma(toStoreTransactions)
 
       // send messages to slack notifying the outcome of the process
@@ -91,23 +108,6 @@ export async function processMessage(event: Event) {
         takenKarmasFromHimself,
         affectedUsers,
       })
-
-      // TODO remove this logs
-      console.log('karmaRelatedMatches', karmaRelatedMatches)
-      console.log('transactions', transactions)
-      console.log('validTransactions', validTransactions)
-
-      console.log('givenKarmasToHimself', givenKarmasToHimself)
-      console.log('takenKarmasFromHimself', takenKarmasFromHimself)
-      console.log('totalKarmaToGive', totalKarmaToGive)
-      console.log('totalKarmaToTake', totalKarmaToTake)
-
-      console.log('givenKarmaLast2Weeks', givenKarmaLast2Weeks)
-      console.log('takenKarmaLast2Weeks', takenKarmaLast2Weeks)
-      console.log('canGiveKarma', canGiveKarma)
-      console.log('canTakeKarma', canTakeKarma)
-
-      console.log('affectedUsers', affectedUsers)
     }
   } catch (error) {
     console.log('error', error)
