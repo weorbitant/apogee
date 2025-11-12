@@ -28,6 +28,10 @@ type Event = {
 const REGEX = /<@[^>]+> (\+{2,}|-{2,})/g
 const LIMIT = 50
 
+const retrieveProviderId = (user: string) => {
+  return user.replace('<@', '').replace('>', '').trim()
+}
+
 export async function processMessage(event: Event) {
   // TODO remove this logs
   const { channel, text, user } = event
@@ -76,16 +80,15 @@ export async function processMessage(event: Event) {
         canGiveKarma,
         canTakeKarma
       )
-      const fromUsers = validTransactions.map(transaction => transaction.fromUser.replace('<@', '').replace('>', '').trim())
-      const toUsers = validTransactions.map(transaction => transaction.toUser.replace('<@', '').replace('>', '').trim())
+      const fromUsers = validTransactions.map(transaction => retrieveProviderId(transaction.fromUser))
+      const toUsers = validTransactions.map(transaction => retrieveProviderId(transaction.toUser))
       const users = [...new Set([...fromUsers, ...toUsers])]
+      let userIds: Record<string, string> = {}
       for (let userToStore of users) {
         const userInfo = await getUserInfo(userToStore)
-        console.log('userInfo', userInfo);
-        
         if (userInfo && userInfo.id) {
           const profile = userInfo.profile ?? {}
-          await createUserIfNotExists('slack', userInfo.id, {
+          const savedUser = await createUserIfNotExists('slack', userInfo.id, {
             username: userInfo.name ?? '',
             displayName: profile.display_name ?? '',
             realName: profile.real_name ?? '',
@@ -94,9 +97,16 @@ export async function processMessage(event: Event) {
             isBot: userInfo.is_bot,
             isActive: true,
           })
+          userIds[userToStore] = savedUser.id
         }
       }
-      const affectedUsers = await storeKarma(toStoreTransactions)
+      const transactionsWithUserIds = toStoreTransactions.map(transaction => ({
+        ...transaction,
+        fromUserId: userIds[retrieveProviderId(transaction.fromUser)] as string,
+        toUserId: userIds[retrieveProviderId(transaction.toUser)] as string,
+      }))
+
+      const affectedUsers = await storeKarma(transactionsWithUserIds)
 
       // send messages to slack notifying the outcome of the process
       await sendSlackMessages({
