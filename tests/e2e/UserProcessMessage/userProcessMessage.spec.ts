@@ -16,7 +16,7 @@ import { getUserInfo, sendSlackMessages } from '@/app/_lib/_slack'
 describe('processMessageDB post to user table migration', () => {
   const user1Id = 'U096G3T569M'
   beforeEach(async () => {
-    vi.resetAllMocks()
+    vi.mocked(getUserInfo).mockRestore()
     await prisma.transaction.deleteMany({})
     await prisma.user.deleteMany({})
   })

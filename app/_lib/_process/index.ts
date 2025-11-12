@@ -102,10 +102,9 @@ export async function processMessage(event: Event) {
       }
       const transactionsWithUserIds = toStoreTransactions.map(transaction => ({
         ...transaction,
-        fromUserId: userIds[retrieveProviderId(transaction.fromUser)] as string,
-        toUserId: userIds[retrieveProviderId(transaction.toUser)] as string,
+        fromUserId: userIds[retrieveProviderId(transaction.fromUser)],
+        toUserId: userIds[retrieveProviderId(transaction.toUser)],
       }))
-
       const affectedUsers = await storeKarma(transactionsWithUserIds)
 
       // send messages to slack notifying the outcome of the process
