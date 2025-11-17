@@ -2,13 +2,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('@/app/_lib/_slack', () => ({
   sendSlackMessages: vi.fn(),
+  getUserInfo: vi.fn().mockResolvedValue(null),
 }))
 
 import { processMessage } from '@/app/_lib/_process'
-import { getGivenKarmaLast2Weeks, getTakenKarmaLast2Weeks, prisma, storeKarma } from '@/app/_lib/_db'
+import { prisma } from '@/app/_lib/_db'
 import { sendSlackMessages } from '@/app/_lib/_slack'
 
-describe('processMessage', () => {
+describe('NoUsersProcessMessage', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     await prisma.transaction.deleteMany({})
@@ -47,6 +48,8 @@ describe('processMessage', () => {
     expect(transactions[0].toUser).toBe('<@USER11111>')
     expect(transactions[0].amount).toBe(2)
     expect(transactions[0].message).toBe('<@USER11111> +++')
+    expect(transactions[0].fromUserId).toBeNull()
+    expect(transactions[0].toUserId).toBeNull()
     expect(transactions[0].timestamp).toBeInstanceOf(Date)
     expect(sendSlackMessages).toHaveBeenCalledWith({
       channel: 'C123',
@@ -109,11 +112,15 @@ describe('processMessage', () => {
     expect(transactions[0].amount).toBe(2)
     expect(transactions[0].message).toBe('<@USER11111> +++ <@USER33333> +++')
     expect(transactions[0].timestamp).toBeInstanceOf(Date)
+    expect(transactions[0].fromUserId).toBeNull()
+    expect(transactions[0].toUserId).toBeNull()
     expect(transactions[1].fromUser).toBe('<@USER22222>')
     expect(transactions[1].toUser).toBe('<@USER33333>')
     expect(transactions[1].amount).toBe(2)
     expect(transactions[1].message).toBe('<@USER11111> +++ <@USER33333> +++')
     expect(transactions[1].timestamp).toBeInstanceOf(Date)
+    expect(transactions[1].fromUserId).toBeNull()
+    expect(transactions[1].toUserId).toBeNull()
     expect(sendSlackMessages).toHaveBeenCalledWith({
       channel: 'C123',
       fromUser: '<@USER22222>',

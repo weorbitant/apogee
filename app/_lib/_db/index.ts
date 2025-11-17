@@ -83,3 +83,38 @@ export async function storeKarma(
 
   return affectedUsers
 }
+
+interface User {
+  username: string
+  displayName: string
+  realName?: string
+  avatarUrl?: string
+  timezone?: string
+  isBot?: boolean
+  isActive?: boolean
+}
+
+export const getUser = async (provider: string, providerId: string) => {
+  return await prisma.user.findUnique({
+    where: {
+      provider_providerId: {
+        provider: provider,
+        providerId: providerId,
+      },
+    },
+  })
+}
+
+export const createUserIfNotExists = async (provider: string, providerId: string, user: User) => {
+  const existingUser = await getUser(provider, providerId)
+  if (existingUser) {
+    return existingUser
+  }
+  return await prisma.user.create({
+    data: {
+      provider: provider,
+      providerId: providerId,
+      ...user,
+    },
+  })
+}

@@ -1,8 +1,13 @@
-import { WebClient } from '@slack/web-api'
+import { UsersInfoResponse, WebClient } from '@slack/web-api'
 
 const slack = new WebClient(process.env.SLACK_BOT_TOKEN)
 
-export async function sendSlackMessages({
+export async function getUserInfo(userId: string): Promise<UsersInfoResponse['user'] | null> {
+  const res = await slack.users.info({ user: userId })
+  return res.ok ? res.user : null
+}
+
+export async function sendSlackMessages({  
   channel,
   fromUser,
   canGiveKarma,

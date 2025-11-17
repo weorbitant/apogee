@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 // Mock the DB and Slack modules to control their behavior and spy on calls
 
-
 // 👇 mock both modules before importing the function under test
 vi.mock('@/app/_lib/_db/index', () => ({
   storeKarma: vi.fn().mockResolvedValue([]),
@@ -11,6 +10,7 @@ vi.mock('@/app/_lib/_db/index', () => ({
 
 vi.mock('@/app/_lib/_slack', () => ({
   sendSlackMessages: vi.fn(),
+  getUserInfo: vi.fn().mockResolvedValue(null),
 }))
 
 import { processMessage } from '@/app/_lib/_process'

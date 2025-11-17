@@ -14,14 +14,50 @@ datasource db {
   url      = "file:./dev.db"
 }
 
+model User {
+  id           String   @id @default(uuid()) // Our own UUID
+  providerId   String   // Slack user ID like "W012A3CDE"
+  username     String   // Slack username like "kevin.martinez"
+  displayName  String   // Display name like "Kevin Martínez"
+  realName     String?  // Real name like "Kevin Martínez"
+  email        String?  // Email if available
+  avatarUrl    String?  // Profile image URL
+  timezone     String?  // Timezone like "Europe/Amsterdam"
+  isBot        Boolean  @default(false)
+  isActive     Boolean  @default(true)
+  provider     String   @default("slack") // For future multi-provider support
+  providerData String?  // JSON string for provider-specific data
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  sentTransactions     Transaction[] @relation("FromUserRelation")
+  receivedTransactions Transaction[] @relation("ToUserRelation")
+
+  @@unique([provider, providerId]) // Unique combination of provider and providerId
+  @@index([provider])
+  @@index([providerId])
+  @@index([username])
+}
+
 model Transaction {
   uuid      String   @id @default(uuid())
   message   String
-  fromUser  String
-  toUser    String
+  fromUser  String   // Keep existing Slack ID format like "<@U0961UA5VT7>"
+  toUser    String   // Keep existing Slack ID format like "<@U0961UA5VT7>"
   amount    Int
   timestamp DateTime
   total     Int
+  
+  // New nullable columns for User table relations
+  fromUserId String? // UUID reference to User.id
+  toUserId   String? // UUID reference to User.id
+  
+  // Relations (nullable since existing data won't have these)
+  fromUserData User? @relation("FromUserRelation", fields: [fromUserId], references: [id])
+  toUserData   User? @relation("ToUserRelation", fields: [toUserId], references: [id])
 
   @@index([fromUser])
+  @@index([fromUserId]) // New index for performance
+  @@index([toUserId])   // New index for performance
 }
