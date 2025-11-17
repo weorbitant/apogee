@@ -80,12 +80,12 @@ export async function processMessage(event: Event) {
         canGiveKarma,
         canTakeKarma
       )
-      const fromUsers = validTransactions.map(transaction => retrieveProviderId(transaction.fromUser))
-      const toUsers = validTransactions.map(transaction => retrieveProviderId(transaction.toUser))
-      const users = [...new Set([...fromUsers, ...toUsers])]
-      let userIds: Record<string, string> = {}
-      for (let userToStore of users) {
-        const userInfo = await getUserInfo(userToStore)
+      const fromUsersIds = validTransactions.map(transaction => retrieveProviderId(transaction.fromUser))
+      const toUsersIds = validTransactions.map(transaction => retrieveProviderId(transaction.toUser))
+      const usersIds = [...new Set([...fromUsersIds, ...toUsersIds])]
+      const userIds: Record<string, string> = {}
+      for (const userId of usersIds) {
+        const userInfo = await getUserInfo(userId)
         if (userInfo && userInfo.id) {
           const profile = userInfo.profile ?? {}
           const savedUser = await createUserIfNotExists('slack', userInfo.id, {
@@ -97,7 +97,7 @@ export async function processMessage(event: Event) {
             isBot: userInfo.is_bot,
             isActive: true,
           })
-          userIds[userToStore] = savedUser.id
+          userIds[userId] = savedUser.id
         }
       }
       const transactionsWithUserIds = toStoreTransactions.map(transaction => ({
