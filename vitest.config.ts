@@ -5,6 +5,19 @@ import path from 'path'
 export default defineConfig({
   test: {
     environment: 'node',
+    sequence: {
+      shuffle: false,
+      concurrent: false,
+    },
+    fileParallelism: false,
+    globals: true,
+    poolOptions: {
+      threads: {
+        isolate: true,
+        singleThread: true,
+        maxThreads: 1,
+      },
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -20,6 +33,7 @@ export default defineConfig({
         '**/package-lock.json',
         '**/next.config.ts',
         '**/vitest.config.ts',
+        '**/*.tsx',
       ],
       // Coverage thresholds (optional - you can adjust these)
       thresholds: {
