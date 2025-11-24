@@ -1,3 +1,4 @@
+import { kataPrompting } from '@/app/_lib/_process/kataPrompting';
 import { waitUntil } from '@vercel/functions'
 
 export const config = {
@@ -5,14 +6,15 @@ export const config = {
 }
 
 interface KataPromptingRequest {
+  channel: string;
   tools: string;
   prompt: string;
 }
 
 async function processKataPrompting(body: KataPromptingRequest) {
   // TODO: Implement kata prompting logic here
-  const { tools, prompt } = body
-  console.log('Processing kata prompting with:', { tools, prompt })
+  const { tools, prompt, channel } = body
+  await kataPrompting(channel, tools, prompt)
 }
 
 export async function POST(request: Request) {
