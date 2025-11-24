@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { POST } from '@/app/api/kata-prompting/route'
+import { processKataPrompting } from '@/app/api/kata-prompting/route'
 import type { ChatCompletion } from 'openai/resources/chat/completions'
 import * as openaiClient from '@/app/_lib/_openai/client'
 import * as slackClient from '@/app/_lib/_slack'
@@ -61,13 +61,8 @@ describe('promptingKataEndpoint', () => {
     } as ChatCompletion)
   })
 
-  it('should call createChatCompletion with correct parameters for tool selection', async () => {
-    const request = new Request('http://localhost:3000/api/kata-prompting', {
-      method: 'POST',
-      body: JSON.stringify({ channel: 'C123', tools: 'tools', prompt: 'prompt' }),
-    })
-    
-    await POST(request)
+  it('should call createChatCompletion with correct parameters for tool selection', async () => {    
+    await processKataPrompting({ channel: 'C123', tools: 'tools', prompt: 'prompt' })
     
     // Verify first call (tool selection)
     expect(mockCreateChatCompletion).toHaveBeenNthCalledWith(
@@ -96,24 +91,14 @@ describe('promptingKataEndpoint', () => {
     )
   })
 
-  it('should call createChatCompletion twice (tool selection and message composition)', async () => {
-    const request = new Request('http://localhost:3000/api/kata-prompting', {
-      method: 'POST',
-      body: JSON.stringify({ channel: 'C123', tools: 'tools', prompt: 'prompt' }),
-    })
-    
-    await POST(request)
+  it('should call createChatCompletion twice (tool selection and message composition)', async () => {    
+    await processKataPrompting({ channel: 'C123', tools: 'tools', prompt: 'prompt' })
     
     expect(mockCreateChatCompletion).toHaveBeenCalledTimes(2)
   })
 
-  it.only('should call sendKataPrompting with the composed message', async () => {
-    const request = new Request('http://localhost:3000/api/kata-prompting', {
-      method: 'POST',
-      body: JSON.stringify({ channel: 'C123', tools: 'tools', prompt: 'prompt' }),
-    })
-    
-    await POST(request)
+  it('should call sendKataPrompting with the composed message', async () => {
+    await processKataPrompting({ channel: 'C123', tools: 'tools', prompt: 'prompt' })
     
     expect(mockSendKataPrompting).toHaveBeenCalledWith(
       'C123',

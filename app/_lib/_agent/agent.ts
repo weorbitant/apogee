@@ -1,4 +1,4 @@
-import { getLastWeekLeaderboard, getLastWeekTransactions, getTodayLeaderboard } from "../_db/stats";
+import { getLastWeekLeaderboard, getLastWeekTransactions, getTodayLeaderboard } from "../_db/index";
 import { ChatCompletionCreateParams, createChatCompletion } from "../_openai/client";
 
 interface UserInput {
@@ -145,8 +145,6 @@ export async function main(tools: string, prompt: string): Promise<string> {
   if (!toolCalls) {
     throw new Error("No tools were selected by the model");
   }
-
-  console.log("\n🔧 Herramientas seleccionadas por el modelo:");
 
   // 2. Execute the tools
   const toolResults: ToolResults = {};

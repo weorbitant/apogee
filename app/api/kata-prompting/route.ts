@@ -11,7 +11,7 @@ interface KataPromptingRequest {
   prompt: string;
 }
 
-async function processKataPrompting(body: KataPromptingRequest) {
+export async function processKataPrompting(body: KataPromptingRequest) {
   // TODO: Implement kata prompting logic here
   const { tools, prompt, channel } = body
   await kataPrompting(channel, tools, prompt)
