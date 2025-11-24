@@ -1,12 +1,11 @@
 import OpenAI from "openai";
 import type { ChatCompletionCreateParams } from "openai/resources/chat/completions";
-import type { ChatCompletionChunk } from "openai/resources/chat/completions";
-import type { Stream } from "openai/streaming";
+import type { ChatCompletion } from "openai/resources/chat/completions";
 
-export type { ChatCompletionCreateParams, ChatCompletionChunk, Stream };
+export type { ChatCompletionCreateParams, ChatCompletion };
 
 export interface OpenAIClientInterface {
-  createChatCompletion(params: ChatCompletionCreateParams): Promise<Stream<ChatCompletionChunk>>;
+  createChatCompletion(params: ChatCompletionCreateParams): Promise<ChatCompletion>;
 }
 
 export class OpenAIClient implements OpenAIClientInterface {
@@ -16,12 +15,12 @@ export class OpenAIClient implements OpenAIClientInterface {
     this.client = new OpenAI({ apiKey: apiKey || process.env.OPENAI_API_KEY });
   }
 
-  async createChatCompletion(params: ChatCompletionCreateParams): Promise<Stream<ChatCompletionChunk>> {
-    const stream = await this.client.chat.completions.create({
+  async createChatCompletion(params: ChatCompletionCreateParams): Promise<ChatCompletion> {
+    const completion = await this.client.chat.completions.create({
       ...params,
-      stream: true
+      stream: false
     });
-    return stream;
+    return completion;
   }
 }
 
