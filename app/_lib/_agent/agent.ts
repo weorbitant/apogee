@@ -1,5 +1,5 @@
 import { getLastWeekLeaderboard, getLastWeekTransactions, getTodayLeaderboard } from "../_db/stats";
-import { ChatCompletionCreateParams, openAIClient, type OpenAIClientInterface } from "../_openai/client";
+import { ChatCompletionCreateParams, createChatCompletion } from "../_openai/client";
 
 interface UserInput {
   tools: string;
@@ -33,8 +33,7 @@ interface ToolResults {
 }
 
 async function callModelWithTools(
-  userInput: UserInput,
-  client: OpenAIClientInterface = openAIClient
+  userInput: UserInput
 ): Promise<ToolCall[] | null> {
   const params: ChatCompletionCreateParams = {
     model: "gpt-4.1-mini",
@@ -88,7 +87,7 @@ async function callModelWithTools(
     ]
   };
 
-  const completion = await client.createChatCompletion(params);
+  const completion = await createChatCompletion(params);
   const toolCalls: ToolCall[] = [];
 
   if (completion.choices[0]?.message?.tool_calls) {
@@ -107,8 +106,7 @@ async function callModelWithTools(
 
 async function callModelToComposeMessage(
   userInput: UserInput,
-  toolResults: ToolResults,
-  client: OpenAIClientInterface = openAIClient
+  toolResults: ToolResults
 ): Promise<string> {
   const params: ChatCompletionCreateParams = {
     model: "gpt-4.1-mini",
@@ -128,7 +126,7 @@ async function callModelToComposeMessage(
     ]
   };
 
-  const completion = await client.createChatCompletion(params);
+  const completion = await createChatCompletion(params);
   return completion.choices[0]?.message?.content || "";
 }
 

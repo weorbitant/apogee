@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { processMessage } from '@/app/_lib/_process'
-import { prisma } from '@/app/_lib/_db'
+import { prisma } from '@/app/_lib/_db/instance'
 import user1 from './mocks/user1.json'
 import user2 from './mocks/user2.json'
 import user3 from './mocks/user3.json'
