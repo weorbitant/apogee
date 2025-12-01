@@ -89,7 +89,6 @@ async function callModelWithTools(
 
   const completion = await createChatCompletion(params);
   const toolCalls: ToolCall[] = [];
-
   if (completion.choices[0]?.message?.tool_calls) {
     for (const toolCall of completion.choices[0].message.tool_calls) {
       if (toolCall.type === "function" && toolCall.function?.name) {
@@ -100,7 +99,6 @@ async function callModelWithTools(
       }
     }
   }
-
   return toolCalls.length > 0 ? toolCalls : null;
 }
 
@@ -125,13 +123,13 @@ async function callModelToComposeMessage(
       }
     ]
   };
-
+  
   const completion = await createChatCompletion(params);
   return completion.choices[0]?.message?.content || "";
 }
 
 // ---- MAIN FUNCTION ------------------------
-export async function main(tools: string, prompt: string): Promise<string> {
+export async function processKataPrompting(tools: string, prompt: string): Promise<string> {
   const input: UserInput = {
     tools,
     prompt
@@ -145,7 +143,6 @@ export async function main(tools: string, prompt: string): Promise<string> {
   if (!toolCalls) {
     throw new Error("No tools were selected by the model");
   }
-
   // 2. Execute the tools
   const toolResults: ToolResults = {};
   for (const call of toolCalls) {

@@ -164,8 +164,8 @@ export async function getLastWeekLeaderboard(): Promise<LeaderboardEntry[]> {
   const result = await prisma.$queryRaw<LeaderboardEntry[]>`
     SELECT
       u.realName AS toRealName,
-      q.totalReceived,
-      q.rank
+      CAST(q.totalReceived AS INTEGER) AS totalReceived,
+      CAST(q.rank AS INTEGER) AS rank
     FROM (
       SELECT
         t."toUserId",
@@ -182,7 +182,11 @@ export async function getLastWeekLeaderboard(): Promise<LeaderboardEntry[]> {
     ORDER BY q.rank ASC
   `
   
-  return result
+  return result.map(entry => ({
+    ...entry,
+    totalReceived: Number(entry.totalReceived),
+    rank: Number(entry.rank),
+  }))
 }
 
 /**
@@ -192,8 +196,8 @@ export async function getTodayLeaderboard(): Promise<LeaderboardEntry[]> {
   const result = await prisma.$queryRaw<LeaderboardEntry[]>`
     SELECT
       u.realName AS toRealName,
-      q.totalReceived,
-      q.rank
+      CAST(q.totalReceived AS INTEGER) AS totalReceived,
+      CAST(q.rank AS INTEGER) AS rank
     FROM (
       SELECT
         t."toUserId",
@@ -209,5 +213,9 @@ export async function getTodayLeaderboard(): Promise<LeaderboardEntry[]> {
     ORDER BY q.rank ASC;
   `
   
-  return result
+  return result.map(entry => ({
+    ...entry,
+    totalReceived: Number(entry.totalReceived),
+    rank: Number(entry.rank),
+  }))
 }
