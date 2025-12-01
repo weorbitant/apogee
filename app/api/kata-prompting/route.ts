@@ -11,6 +11,8 @@ interface KataPromptingRequest {
   prompt: string;
 }
 
+const API_KEY = process.env.API_KEY;
+
 export async function processKataPrompting(body: KataPromptingRequest) {
   // TODO: Implement kata prompting logic here
   const { tools, prompt, channel } = body
@@ -19,6 +21,9 @@ export async function processKataPrompting(body: KataPromptingRequest) {
 
 export async function POST(request: Request) {
   try {
+    if (request.headers.get('Authorization') !== API_KEY) {
+      return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    }
     const body: KataPromptingRequest = await request.json()
     
     console.log('Kata prompting request:', JSON.stringify(body, null, 2))
