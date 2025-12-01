@@ -205,4 +205,27 @@ describe('promptingKataEndpoint', () => {
       'Mocked response message'
     )
   })
+
+  it('should throw an error if no tools were selected by the model', async () => {
+    vi.clearAllMocks()
+    vi.resetAllMocks()
+    mockCreateChatCompletion.mockResolvedValueOnce({
+      ...openAPIToolsResponse,
+      "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": null,
+        "tool_calls": [],
+        "refusal": null,
+        "annotations": []
+      },
+      "logprobs": null,
+      "finish_reason": "tool_calls"
+    }
+  ],
+    } as ChatCompletion)
+    await expect(processKataPrompting({ channel: 'C123', tools: 'tools', prompt: 'prompt' })).rejects.toThrow('No tools were selected by the model')
+  })
 })

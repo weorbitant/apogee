@@ -141,6 +141,7 @@ export async function processKataPrompting(tools: string, prompt: string): Promi
   const toolCalls = await callModelWithTools(input);
 
   if (!toolCalls) {
+    console.log('No tools were selected by the model');
     throw new Error("No tools were selected by the model");
   }
   // 2. Execute the tools
