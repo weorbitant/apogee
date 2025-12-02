@@ -1,8 +1,7 @@
 import { v4 as uuidv4 } from 'uuid'
-import { Transaction } from '@prisma/client'
-import { PrismaClient } from '@prisma/client'
-import { PrismaLibSQL } from '@prisma/adapter-libsql'
-import { createClient } from '@libsql/client'
+import { PrismaClient, type Transaction } from "@prisma/client";
+import { PrismaLibSQL } from "@prisma/adapter-libsql";
+import { createClient } from "@libsql/client";
 
 const libsql = createClient({
   url: `${process.env.TURSO_DATABASE_URL}`,
@@ -117,4 +116,106 @@ export const createUserIfNotExists = async (provider: string, providerId: string
       ...user,
     },
   })
+}
+
+interface LastWeekTransaction {
+  message: string
+  amount: number
+  timestamp: Date
+  newTotal: number
+  fromName: string
+  toName: string
+}
+
+interface LeaderboardEntry {
+  toRealName: string
+  totalReceived: number
+  rank: number
+}
+
+/**
+ * Get all transactions from the last 7 days with user details
+ */
+export async function getLastWeekTransactions(): Promise<LastWeekTransaction[]> {
+  const result = await prisma.$queryRaw<LastWeekTransaction[]>`
+    SELECT
+      t.message,
+      t.amount,
+      t.timestamp,
+      t.total as "newTotal",
+      u_from.realName AS fromName,
+      u_to.realName AS toName
+    FROM "Transaction" t
+    JOIN "User" u_from ON u_from.id = t."fromUserId"
+    JOIN "User" u_to ON u_to.id = t."toUserId"
+    WHERE t.timestamp >= datetime('now', '-7 days')
+      AND u_from.realName IS NOT NULL
+      AND u_to.realName IS NOT NULL
+    ORDER BY t.timestamp DESC
+  `
+  
+  return result
+}
+
+/**
+ * Get leaderboard with total karma received per user from last 7 days
+ */
+export async function getLastWeekLeaderboard(): Promise<LeaderboardEntry[]> {
+  const result = await prisma.$queryRaw<LeaderboardEntry[]>`
+    SELECT
+      u.realName AS toRealName,
+      CAST(q.totalReceived AS INTEGER) AS totalReceived,
+      CAST(q.rank AS INTEGER) AS rank
+    FROM (
+      SELECT
+        t."toUserId",
+        SUM(t.amount) AS totalReceived,
+        ROW_NUMBER() OVER (ORDER BY SUM(t.amount) DESC) AS rank
+      FROM "Transaction" t
+      WHERE 
+        t.timestamp >= datetime('now', '-7 days')
+        AND t."toUserId" IS NOT NULL
+      GROUP BY t."toUserId"
+    ) q
+    JOIN "User" u ON u.id = q."toUserId"
+    WHERE u.realName IS NOT NULL
+    ORDER BY q.rank ASC
+  `
+  
+  return result.map(entry => ({
+    ...entry,
+    totalReceived: Number(entry.totalReceived),
+    rank: Number(entry.rank),
+  }))
+}
+
+/**
+ * Get leaderboard with total karma received per user from today (total karma)
+ */
+export async function getTodayLeaderboard(): Promise<LeaderboardEntry[]> {
+  const result = await prisma.$queryRaw<LeaderboardEntry[]>`
+    SELECT
+      u.realName AS toRealName,
+      CAST(q.totalReceived AS INTEGER) AS totalReceived,
+      CAST(q.rank AS INTEGER) AS rank
+    FROM (
+      SELECT
+        t."toUserId",
+        SUM(t.amount) AS totalReceived,
+        ROW_NUMBER() OVER (ORDER BY SUM(t.amount) DESC) AS rank
+      FROM "Transaction" t
+      WHERE 
+        date(t.timestamp) <= date('now')
+        AND t."toUserId" IS NOT NULL
+      GROUP BY t."toUserId"
+    ) q
+    JOIN "User" u ON u.id = q."toUserId"
+    ORDER BY q.rank ASC;
+  `
+  
+  return result.map(entry => ({
+    ...entry,
+    totalReceived: Number(entry.totalReceived),
+    rank: Number(entry.rank),
+  }))
 }
