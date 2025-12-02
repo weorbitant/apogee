@@ -7,7 +7,7 @@ export async function getUserInfo(userId: string): Promise<UsersInfoResponse['us
   return res.ok ? res.user : null
 }
 
-export async function sendKataPrompting(channel: string, text: string) {
+export async function sendPromptMessage(channel: string, text: string) {
   await slack.chat.postMessage({
     channel,
     text,

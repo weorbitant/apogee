@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { processKataPrompting } from '@/app/api/kata-prompting/route'
+import { aiWeeklySummary } from '@/app/_lib/_process/aiWeeklySummary'
 import type { ChatCompletion } from 'openai/resources/chat/completions'
 import * as openaiClient from '@/app/_lib/_openai/client'
 import * as slackClient from '@/app/_lib/_slack'
@@ -18,12 +18,12 @@ vi.mock('@/app/_lib/_openai/client', () => ({
 
 // Mock Slack
 vi.mock('@/app/_lib/_slack', () => ({
-  sendKataPrompting: vi.fn(),
+  sendPromptMessage: vi.fn(),
 }))
 
-describe('promptingKataEndpoint', () => {
+describe('aiWeeklySummary', () => {
   const mockCreateChatCompletion = vi.mocked(openaiClient.createChatCompletion)
-  const mockSendKataPrompting = vi.mocked(slackClient.sendKataPrompting)
+  const mockSendPromptMessage = vi.mocked(slackClient.sendPromptMessage)
 
   beforeEach(async () => {
     vi.clearAllMocks()
@@ -48,7 +48,7 @@ describe('promptingKataEndpoint', () => {
   })
 
   it('should call createChatCompletion with correct parameters for tool selection with empty tool results', async () => {    
-    await processKataPrompting({ channel: 'C123', tools: 'tools', prompt: 'prompt' })
+    await aiWeeklySummary('C123', 'tools', 'prompt')
     
     // Verify first call (tool selection)
     expect(mockCreateChatCompletion).toHaveBeenNthCalledWith(
@@ -143,7 +143,7 @@ describe('promptingKataEndpoint', () => {
         toUser: '<@USER22222>',
       },
     })
-    await processKataPrompting({ channel: 'C123', tools: 'getLastWeekLeaderboard,getLastWeekTransactions,getTodayLeaderboard', prompt: 'prompt' })
+    await aiWeeklySummary('C123', 'getLastWeekLeaderboard,getLastWeekTransactions,getTodayLeaderboard', 'prompt')
     const expectedLeaderboard = [
       {
         toRealName: 'User 2',
@@ -197,10 +197,10 @@ describe('promptingKataEndpoint', () => {
     )
   })
 
-  it('should call sendKataPrompting with the composed message', async () => {
-    await processKataPrompting({ channel: 'C123', tools: 'tools', prompt: 'prompt' })
+  it('should call sendPromptMessage with the composed message', async () => {
+    await aiWeeklySummary('C123', 'tools', 'prompt')
     
-    expect(mockSendKataPrompting).toHaveBeenCalledWith(
+    expect(mockSendPromptMessage).toHaveBeenCalledWith(
       'C123',
       'Mocked response message'
     )
@@ -226,6 +226,6 @@ describe('promptingKataEndpoint', () => {
     }
   ],
     } as ChatCompletion)
-    await expect(processKataPrompting({ channel: 'C123', tools: 'tools', prompt: 'prompt' })).rejects.toThrow('No tools were selected by the model')
+    await expect(aiWeeklySummary('C123', 'tools', 'prompt')).rejects.toThrow('No tools were selected by the model')
   })
 })

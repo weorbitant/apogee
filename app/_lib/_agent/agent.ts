@@ -129,7 +129,7 @@ async function callModelToComposeMessage(
 }
 
 // ---- MAIN FUNCTION ------------------------
-export async function processKataPrompting(tools: string, prompt: string): Promise<string> {
+export async function processPrompt(tools: string, prompt: string): Promise<string> {
   const input: UserInput = {
     tools,
     prompt
