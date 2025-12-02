@@ -1,5 +1,4 @@
-# This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
-# For more information see: https://help.github.com/actions/language-and-framework-guides/publishing-nodejs-packages
+# This workflow runs tests on push and pull requests to the staging branch
 
 name: CI
 
@@ -31,6 +30,17 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+      
+      - name: Run migrations
+        run: npm run migrations
 
       - name: Run Vitest
         run: npm run test:ci
+        env:
+          CHANNEL_ID: example
+          SLACK_BOT_TOKEN: example
+          SLACK_SIGNING_SECRET: example
+          TURSO_AUTH_TOKEN: example
+          TURSO_DATABASE_URL: file://./prisma/dev.db
+          OPENAI_API_KEY: example
+          API_KEY: test
