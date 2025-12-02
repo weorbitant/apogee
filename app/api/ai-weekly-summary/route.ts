@@ -11,11 +11,9 @@ interface AIWeeklySummaryRequest {
   prompt: string;
 }
 
-const API_KEY = process.env.API_KEY;
-
 export async function POST(request: Request) {
   try {
-    if (request.headers.get('Authorization') !== API_KEY) {
+    if (request.headers.get('Authorization') !== process.env.API_KEY) {
       return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
     const body: AIWeeklySummaryRequest = await request.json()
