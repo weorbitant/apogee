@@ -6,7 +6,7 @@ vi.mock('@/app/_lib/_slack', () => ({
 }))
 
 import { processMessage } from '@/app/_lib/_process'
-import { prisma } from '@/app/_lib/_db'
+import { prisma } from '@/app/_lib/_db/index'
 import { sendSlackMessages } from '@/app/_lib/_slack'
 
 describe('NoUsersProcessMessage', () => {
