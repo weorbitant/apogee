@@ -111,7 +111,7 @@ async function callModelToComposeMessage(
     messages: [
       {
         role: "system",
-        content: "Compose a human-readable message using the provided tool data."
+        content: "Compose a human-readable message using the provided tool data, suitable for posting in Slack."
       },
       {
         role: "user",

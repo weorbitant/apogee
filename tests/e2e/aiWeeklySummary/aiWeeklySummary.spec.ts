@@ -88,7 +88,7 @@ describe('aiWeeklySummary', () => {
         messages: expect.arrayContaining([
           expect.objectContaining({
             role: 'system',
-            content: 'Compose a human-readable message using the provided tool data.',
+            content: 'Compose a human-readable message using the provided tool data, suitable for posting in Slack.',
           }),
           expect.objectContaining({
             role: 'user',
@@ -182,7 +182,7 @@ describe('aiWeeklySummary', () => {
         messages: expect.arrayContaining([
           expect.objectContaining({
             role: 'system',
-            content: 'Compose a human-readable message using the provided tool data.',
+            content: 'Compose a human-readable message using the provided tool data, suitable for posting in Slack.',
           }),
           expect.objectContaining({
             role: 'user',
