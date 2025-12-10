@@ -1,16 +1,6 @@
 import { getLastWeekLeaderboard, getLastWeekTransactions, getTodayLeaderboard } from "../_db/index";
 import { ChatCompletionCreateParams, createChatCompletion } from "../_openai/client";
 
-interface UserInput {
-  tools: string;
-  prompt: string;
-}
-
-interface ToolCall {
-  toolName: string;
-  args: Record<string, unknown>;
-}
-
 interface Leaderboard {
   toRealName: string;
   totalReceived: number;
@@ -32,78 +22,8 @@ interface ToolResults {
   getTodayLeaderboard?: Leaderboard[];
 }
 
-async function callModelWithTools(
-  userInput: UserInput
-): Promise<ToolCall[] | null> {
-  const params: ChatCompletionCreateParams = {
-    model: "gpt-4.1-mini",
-    messages: [
-      {
-        role: "system",
-        content: "You are an assistant that decides which tools to call based on user input."
-      },
-      {
-        role: "user",
-        content: JSON.stringify(userInput)
-      }
-    ],
-    tools: [
-      {
-        type: "function",
-        function: {
-          name: "getLastWeekLeaderboard",
-          description: "Get the leaderboard for the last week",
-          parameters: {
-            type: "object",
-            properties: {},
-            required: []
-          }
-        }
-      },
-      {
-        type: "function",
-        function: {
-          name: "getLastWeekTransactions",
-          description: "Get all transactions from the last week",
-          parameters: {
-            type: "object",
-            properties: {},
-            required: []
-          }
-        }
-      },
-      {
-        type: "function",
-        function: {
-          name: "getTodayLeaderboard",
-          description: "Get the leaderboard for today",
-          parameters: {
-            type: "object",
-            properties: {},
-            required: []
-          }
-        }
-      }
-    ]
-  };
-
-  const completion = await createChatCompletion(params);
-  const toolCalls: ToolCall[] = [];
-  if (completion.choices[0]?.message?.tool_calls) {
-    for (const toolCall of completion.choices[0].message.tool_calls) {
-      if (toolCall.type === "function" && toolCall.function?.name) {
-        toolCalls.push({
-          toolName: toolCall.function.name,
-          args: toolCall.function.arguments ? JSON.parse(toolCall.function.arguments) : {}
-        });
-      }
-    }
-  }
-  return toolCalls.length > 0 ? toolCalls : null;
-}
-
 async function callModelToComposeMessage(
-  userInput: UserInput,
+  prompt: string,
   toolResults: ToolResults
 ): Promise<string> {
   const params: ChatCompletionCreateParams = {
@@ -115,7 +35,7 @@ async function callModelToComposeMessage(
       },
       {
         role: "user",
-        content: JSON.stringify(userInput)
+        content: prompt,
       },
       {
         role: "system",
@@ -129,36 +49,20 @@ async function callModelToComposeMessage(
 }
 
 // ---- MAIN FUNCTION ------------------------
-export async function processPrompt(tools: string, prompt: string): Promise<string> {
-  const input: UserInput = {
-    tools,
-    prompt
-  };
+export async function processPrompt(prompt: string): Promise<string> {
+  console.log("🔹 Input del usuario:", prompt);
 
-  console.log("🔹 Input del usuario:", input);
-
-  // 1. First OpenAI call → ask model which tools to use
-  const toolCalls = await callModelWithTools(input);
-
-  if (!toolCalls) {
-    console.log('No tools were selected by the model');
-    throw new Error("No tools were selected by the model");
-  }
-  // 2. Execute the tools
   const toolResults: ToolResults = {};
-  for (const call of toolCalls) {
-    if (call.toolName === "getLastWeekLeaderboard") {
-      toolResults.getLastWeekLeaderboard = await getLastWeekLeaderboard();
-    }
-    if (call.toolName === "getLastWeekTransactions") {
-      toolResults.getLastWeekTransactions = await getLastWeekTransactions();
-    }
-    if (call.toolName === "getTodayLeaderboard") {
-      toolResults.getTodayLeaderboard = await getTodayLeaderboard();
-    }
-  }
+  const toolsResults = await Promise.all([
+    getLastWeekLeaderboard(),
+    getLastWeekTransactions(),
+    getTodayLeaderboard(),
+  ]);
 
-  // 3. Second call → compose final message
-  return await callModelToComposeMessage(input, toolResults);
+  toolResults.getLastWeekLeaderboard = toolsResults[0];
+  toolResults.getLastWeekTransactions = toolsResults[1];
+  toolResults.getTodayLeaderboard = toolsResults[2];
+
+  return await callModelToComposeMessage(prompt, toolResults);
 }
 

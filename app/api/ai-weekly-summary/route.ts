@@ -18,14 +18,14 @@ export async function POST(request: Request) {
     }
     const body: AIWeeklySummaryRequest = await request.json()
 
-    if (!body.channel || !body.tools || !body.prompt) {
+    if (!body.channel || !body.prompt) {
       return Response.json({ success: false, error: 'Missing required fields' }, { status: 400 })
     }
     
     console.log('AI weekly summary request:', JSON.stringify(body, null, 2))
 
     // Process the request asynchronously
-    waitUntil(aiWeeklySummary(body.channel, body.tools, body.prompt))
+    waitUntil(aiWeeklySummary(body.channel, body.prompt))
 
     // Return immediate success response
     return Response.json({ success: true }, { status: 200 })
