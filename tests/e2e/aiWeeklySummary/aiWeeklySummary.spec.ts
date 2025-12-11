@@ -4,7 +4,6 @@ import type { ChatCompletion } from 'openai/resources/chat/completions'
 import * as openaiClient from '@/app/_lib/_openai/client'
 import * as slackClient from '@/app/_lib/_slack'
 import { prisma } from '@/app/_lib/_db/index'
-import openAPIToolsResponse from './mocks/openAPIToolsResponse.json'
 
 // Mock waitUntil to execute immediately
 vi.mock('@vercel/functions', () => ({
@@ -31,9 +30,6 @@ describe('aiWeeklySummary', () => {
     await prisma.transaction.deleteMany({})
     await prisma.user.deleteMany({})
     // Default mock responses for OpenAI calls
-    // First call: tool selection (returns tool_calls)
-    mockCreateChatCompletion.mockResolvedValueOnce(openAPIToolsResponse as ChatCompletion)
-    
     // Second call: message composition (returns content)
     mockCreateChatCompletion.mockResolvedValueOnce({
       choices: [
@@ -48,33 +44,8 @@ describe('aiWeeklySummary', () => {
   })
 
   it('should call createChatCompletion with correct parameters for tool selection with empty tool results', async () => {    
-    await aiWeeklySummary('C123', 'tools', 'prompt')
-    
-    // Verify first call (tool selection)
-    expect(mockCreateChatCompletion).toHaveBeenNthCalledWith(
-      1,
-      expect.objectContaining({
-        model: 'gpt-4.1-mini',
-        messages: expect.arrayContaining([
-          expect.objectContaining({
-            role: 'system',
-            content: 'You are an assistant that decides which tools to call based on user input.',
-          }),
-          expect.objectContaining({
-            role: 'user',
-            content: JSON.stringify({ tools: 'tools', prompt: 'prompt' }),
-          }),
-        ]),
-        tools: expect.arrayContaining([
-          expect.objectContaining({
-            type: 'function',
-            function: expect.objectContaining({
-              name: 'getLastWeekLeaderboard',
-            }),
-          }),
-        ]),
-      })
-    )
+    await aiWeeklySummary('C123', 'prompt')
+
     const expectedToolResults = {
       getLastWeekLeaderboard: [],
       getLastWeekTransactions: [],
@@ -82,7 +53,7 @@ describe('aiWeeklySummary', () => {
     }
     // Second call: message composition
     expect(mockCreateChatCompletion).toHaveBeenNthCalledWith(
-      2,
+      1,
       expect.objectContaining({
         model: 'gpt-4.1-mini',
         messages: expect.arrayContaining([
@@ -92,7 +63,7 @@ describe('aiWeeklySummary', () => {
           }),
           expect.objectContaining({
             role: 'user',
-            content: JSON.stringify({ tools: 'tools', prompt: 'prompt' }),
+            content: 'prompt',
           }),
           expect.objectContaining({
             role: 'system',
@@ -143,7 +114,7 @@ describe('aiWeeklySummary', () => {
         toUser: '<@USER22222>',
       },
     })
-    await aiWeeklySummary('C123', 'getLastWeekLeaderboard,getLastWeekTransactions,getTodayLeaderboard', 'prompt')
+    await aiWeeklySummary('C123', 'prompt')
     const expectedLeaderboard = [
       {
         toRealName: 'User 2',
@@ -176,7 +147,7 @@ describe('aiWeeklySummary', () => {
     }
     // Second call: message composition
     expect(mockCreateChatCompletion).toHaveBeenNthCalledWith(
-      2,
+      1,
       expect.objectContaining({
         model: 'gpt-4.1-mini',
         messages: expect.arrayContaining([
@@ -186,7 +157,7 @@ describe('aiWeeklySummary', () => {
           }),
           expect.objectContaining({
             role: 'user',
-            content: JSON.stringify({ tools: 'getLastWeekLeaderboard,getLastWeekTransactions,getTodayLeaderboard', prompt: 'prompt' }),
+            content: 'prompt',
           }),
           expect.objectContaining({
             role: 'system',
@@ -198,34 +169,11 @@ describe('aiWeeklySummary', () => {
   })
 
   it('should call sendPromptMessage with the composed message', async () => {
-    await aiWeeklySummary('C123', 'tools', 'prompt')
+    await aiWeeklySummary('C123', 'prompt')
     
     expect(mockSendPromptMessage).toHaveBeenCalledWith(
       'C123',
       'Mocked response message'
     )
-  })
-
-  it('should throw an error if no tools were selected by the model', async () => {
-    vi.clearAllMocks()
-    vi.resetAllMocks()
-    mockCreateChatCompletion.mockResolvedValueOnce({
-      ...openAPIToolsResponse,
-      "choices": [
-    {
-      "index": 0,
-      "message": {
-        "role": "assistant",
-        "content": null,
-        "tool_calls": [],
-        "refusal": null,
-        "annotations": []
-      },
-      "logprobs": null,
-      "finish_reason": "tool_calls"
-    }
-  ],
-    } as ChatCompletion)
-    await expect(aiWeeklySummary('C123', 'tools', 'prompt')).rejects.toThrow('No tools were selected by the model')
   })
 })
