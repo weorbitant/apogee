@@ -123,16 +123,6 @@ describe('aiWeeklySummary', () => {
       },
     ]
     // current date but in format for example yyyy-mm-ddThh:mm
-    const expectedTransactions = [
-      {
-        message: 'Test message',
-        amount: 100,
-        timestamp: date,
-        newTotal: 100,
-        fromName: 'User 1',
-        toName: 'User 2',
-      },
-    ]
     const expectedTodayLeaderboard = [
       {
         toRealName: 'User 2',
@@ -142,7 +132,7 @@ describe('aiWeeklySummary', () => {
     ]
     const expectedToolResults = {
       getLastWeekLeaderboard: expectedLeaderboard,
-      getLastWeekTransactions: expectedTransactions,
+      getLastWeekTransactions: [],
       getTodayLeaderboard: expectedTodayLeaderboard,
     }
     // Second call: message composition
@@ -174,6 +164,162 @@ describe('aiWeeklySummary', () => {
     expect(mockSendPromptMessage).toHaveBeenCalledWith(
       'C123',
       'Mocked response message'
+    )
+  })
+
+  it('should correctly filter transactions by date: last week vs this week', async () => {
+    // Create two users
+    const sender1 = await prisma.user.create({
+      data: {
+        username: 'sender1',
+        displayName: 'Sender 1',
+        realName: 'Sender 1',
+        avatarUrl: 'https://example.com/avatar.png',
+        timezone: 'UTC',
+        isBot: false,
+        isActive: true,
+        provider: 'slack',
+        providerId: 'SENDER111',
+      },
+    })
+    
+    const receiver1 = await prisma.user.create({
+      data: {
+        username: 'receiver1',
+        displayName: 'Receiver 1',
+        realName: 'Receiver 1',
+        avatarUrl: 'https://example.com/avatar.png',
+        timezone: 'UTC',
+        isBot: false,
+        isActive: true,
+        provider: 'slack',
+        providerId: 'RECEIVER111',
+      },
+    })
+
+    const sender2 = await prisma.user.create({
+      data: {
+        username: 'sender2',
+        displayName: 'Sender 2',
+        realName: 'Sender 2',
+        avatarUrl: 'https://example.com/avatar.png',
+        timezone: 'UTC',
+        isBot: false,
+        isActive: true,
+        provider: 'slack',
+        providerId: 'SENDER222',
+      },
+    })
+    
+    const receiver2 = await prisma.user.create({
+      data: {
+        username: 'receiver2',
+        displayName: 'Receiver 2',
+        realName: 'Receiver 2',
+        avatarUrl: 'https://example.com/avatar.png',
+        timezone: 'UTC',
+        isBot: false,
+        isActive: true,
+        provider: 'slack',
+        providerId: 'RECEIVER222',
+      },
+    })
+
+    // Create transaction from last week (more than 7 days ago)
+    const lastWeekDate = new Date()
+    lastWeekDate.setDate(lastWeekDate.getDate() - 8) // 8 days ago
+    await prisma.transaction.create({
+      data: {
+        amount: 50,
+        fromUserId: sender1.id,
+        toUserId: receiver1.id,
+        total: 50,
+        message: 'Last week karma',
+        timestamp: lastWeekDate,
+        fromUser: '<@SENDER111>',
+        toUser: '<@RECEIVER111>',
+      },
+    })
+
+    // Create transaction from this week (within last 7 days)
+    const thisWeekDate = new Date()
+    thisWeekDate.setDate(thisWeekDate.getDate() - 3) // 3 days ago
+    await prisma.transaction.create({
+      data: {
+        amount: 100,
+        fromUserId: sender2.id,
+        toUserId: receiver2.id,
+        total: 100,
+        message: 'This week karma',
+        timestamp: thisWeekDate,
+        fromUser: '<@SENDER222>',
+        toUser: '<@RECEIVER222>',
+      },
+    })
+
+    await aiWeeklySummary('C123', 'prompt')
+
+    // Expected results: getLastWeekTransactions should include transaction from last week (8 days ago)
+    const expectedLastWeekTransactions = [
+      {
+        message: 'Last week karma',
+        amount: 50,
+        timestamp: lastWeekDate,
+        newTotal: 50,
+        fromName: 'Sender 1',
+        toName: 'Receiver 1',
+      },
+    ]
+
+    // Expected results: getLastWeekLeaderboard should include transaction from this week (3 days ago), NOT last week
+    const expectedLastWeekLeaderboard = [
+      {
+        toRealName: 'Receiver 2',
+        totalReceived: 100,
+        rank: 1,
+      },
+    ]
+
+    // Expected results: getTodayLeaderboard should include both transactions (all time up to today)
+    const expectedTodayLeaderboard = [
+      {
+        toRealName: 'Receiver 2',
+        totalReceived: 100,
+        rank: 1,
+      },
+      {
+        toRealName: 'Receiver 1',
+        totalReceived: 50,
+        rank: 2,
+      },
+    ]
+
+    const expectedToolResults = {
+      getLastWeekLeaderboard: expectedLastWeekLeaderboard,
+      getLastWeekTransactions: expectedLastWeekTransactions,
+      getTodayLeaderboard: expectedTodayLeaderboard,
+    }
+
+    // Verify the tool results passed to OpenAI
+    expect(mockCreateChatCompletion).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        model: 'gpt-4.1-mini',
+        messages: expect.arrayContaining([
+          expect.objectContaining({
+            role: 'system',
+            content: 'Compose a human-readable message using the provided tool data, suitable for posting in Slack.',
+          }),
+          expect.objectContaining({
+            role: 'user',
+            content: 'prompt',
+          }),
+          expect.objectContaining({
+            role: 'system',
+            content: 'Here are the results from the tools: ' + JSON.stringify(expectedToolResults, null, 2),
+          }),
+        ]),
+      })
     )
   })
 })

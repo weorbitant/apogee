@@ -148,12 +148,11 @@ export async function getLastWeekTransactions(): Promise<LastWeekTransaction[]> 
     FROM "Transaction" t
     JOIN "User" u_from ON u_from.id = t."fromUserId"
     JOIN "User" u_to ON u_to.id = t."toUserId"
-    WHERE t.timestamp >= datetime('now', '-7 days')
+    WHERE t.timestamp <= datetime('now', '-7 days')
       AND u_from.realName IS NOT NULL
       AND u_to.realName IS NOT NULL
     ORDER BY t.timestamp DESC
   `
-  
   return result
 }
 
@@ -181,7 +180,6 @@ export async function getLastWeekLeaderboard(): Promise<LeaderboardEntry[]> {
     WHERE u.realName IS NOT NULL
     ORDER BY q.rank ASC
   `
-  
   return result.map(entry => ({
     ...entry,
     totalReceived: Number(entry.totalReceived),
