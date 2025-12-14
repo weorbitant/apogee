@@ -134,7 +134,8 @@ interface LeaderboardEntry {
 }
 
 /**
- * Get all transactions from the last 7 days with user details
+ * Returns all transactions (points given or taken) from the last 7 days.
+ * Includes messages, amounts, timestamps, and who gave/received points.
  */
 export async function getLastWeekTransactions(): Promise<LastWeekTransaction[]> {
   const result = await prisma.$queryRaw<LastWeekTransaction[]>`
@@ -148,7 +149,7 @@ export async function getLastWeekTransactions(): Promise<LastWeekTransaction[]> 
     FROM "Transaction" t
     JOIN "User" u_from ON u_from.id = t."fromUserId"
     JOIN "User" u_to ON u_to.id = t."toUserId"
-    WHERE t.timestamp <= datetime('now', '-7 days')
+    WHERE t.timestamp >= datetime('now', '-7 days')
       AND u_from.realName IS NOT NULL
       AND u_to.realName IS NOT NULL
     ORDER BY t.timestamp DESC
@@ -157,7 +158,8 @@ export async function getLastWeekTransactions(): Promise<LastWeekTransaction[]> 
 }
 
 /**
- * Get leaderboard with total karma received per user from last 7 days
+ * Retrieves the leaderboard snapshot from 7 days ago.
+ * Returns the leaderboard state as it was exactly 7 days ago (all transactions up to that point).
  */
 export async function getLastWeekLeaderboard(): Promise<LeaderboardEntry[]> {
   const result = await prisma.$queryRaw<LeaderboardEntry[]>`
@@ -172,7 +174,7 @@ export async function getLastWeekLeaderboard(): Promise<LeaderboardEntry[]> {
         ROW_NUMBER() OVER (ORDER BY SUM(t.amount) DESC) AS rank
       FROM "Transaction" t
       WHERE 
-        t.timestamp >= datetime('now', '-7 days')
+        t.timestamp <= datetime('now', '-7 days')
         AND t."toUserId" IS NOT NULL
       GROUP BY t."toUserId"
     ) q
@@ -188,7 +190,8 @@ export async function getLastWeekLeaderboard(): Promise<LeaderboardEntry[]> {
 }
 
 /**
- * Get leaderboard with total karma received per user from today (total karma)
+ * Shows the current leaderboard as of today.
+ * Returns all-time leaderboard up to and including today.
  */
 export async function getTodayLeaderboard(): Promise<LeaderboardEntry[]> {
   const result = await prisma.$queryRaw<LeaderboardEntry[]>`

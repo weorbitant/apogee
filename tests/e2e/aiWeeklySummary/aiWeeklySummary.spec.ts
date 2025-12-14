@@ -115,14 +115,18 @@ describe('aiWeeklySummary', () => {
       },
     })
     await aiWeeklySummary('C123', 'prompt')
-    const expectedLeaderboard = [
+    // Transaction from today should appear in getLastWeekTransactions (last 7 days) and getTodayLeaderboard (all time)
+    // but NOT in getLastWeekLeaderboard (snapshot from 7 days ago)
+    const expectedLastWeekTransactions = [
       {
-        toRealName: 'User 2',
-        totalReceived: 100,
-        rank: 1,
+        message: 'Test message',
+        amount: 100,
+        timestamp: date,
+        newTotal: 100,
+        fromName: 'User 1',
+        toName: 'User 2',
       },
     ]
-    // current date but in format for example yyyy-mm-ddThh:mm
     const expectedTodayLeaderboard = [
       {
         toRealName: 'User 2',
@@ -131,9 +135,9 @@ describe('aiWeeklySummary', () => {
       },
     ]
     const expectedToolResults = {
-      getLastWeekLeaderboard: expectedLeaderboard,
-      getLastWeekTransactions: [],
-      getTodayLeaderboard: expectedTodayLeaderboard,
+      getLastWeekLeaderboard: [], // Empty - today's transaction is not in snapshot from 7 days ago
+      getLastWeekTransactions: expectedLastWeekTransactions, // Today is within last 7 days
+      getTodayLeaderboard: expectedTodayLeaderboard, // All time up to today
     }
     // Second call: message composition
     expect(mockCreateChatCompletion).toHaveBeenNthCalledWith(
@@ -167,7 +171,7 @@ describe('aiWeeklySummary', () => {
     )
   })
 
-  it('should correctly filter transactions by date: last week vs this week', async () => {
+  it('should correctly filter transactions by date: validates getLastWeekTransactions (last 7 days), getLastWeekLeaderboard (snapshot from 7 days ago), and getTodayLeaderboard (all time)', async () => {
     // Create two users
     const sender1 = await prisma.user.create({
       data: {
@@ -259,23 +263,23 @@ describe('aiWeeklySummary', () => {
 
     await aiWeeklySummary('C123', 'prompt')
 
-    // Expected results: getLastWeekTransactions should include transaction from last week (8 days ago)
+    // Expected results: getLastWeekTransactions should include transaction from this week (3 days ago - within last 7 days)
     const expectedLastWeekTransactions = [
       {
-        message: 'Last week karma',
-        amount: 50,
-        timestamp: lastWeekDate,
-        newTotal: 50,
-        fromName: 'Sender 1',
-        toName: 'Receiver 1',
+        message: 'This week karma',
+        amount: 100,
+        timestamp: thisWeekDate,
+        newTotal: 100,
+        fromName: 'Sender 2',
+        toName: 'Receiver 2',
       },
     ]
 
-    // Expected results: getLastWeekLeaderboard should include transaction from this week (3 days ago), NOT last week
+    // Expected results: getLastWeekLeaderboard should include transaction from last week (8 days ago - snapshot from 7 days ago)
     const expectedLastWeekLeaderboard = [
       {
-        toRealName: 'Receiver 2',
-        totalReceived: 100,
+        toRealName: 'Receiver 1',
+        totalReceived: 50,
         rank: 1,
       },
     ]
