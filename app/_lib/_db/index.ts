@@ -43,6 +43,26 @@ export async function getTakenKarmaLast2Weeks(user: string) {
   return takenKarmaLast2Weeks._sum.amount ?? 0
 }
 
+// Slack can deliver the same message more than once (retries, or redeliveries
+// with a new event_id during a Slack incident). A message is a duplicate when
+// its author already has a transaction with the same text stored after the
+// message was sent: an identical message sent later has a later Slack ts.
+export async function isMessageAlreadyProcessed(
+  fromUser: string,
+  message: string,
+  sentAt: Date
+) {
+  const existing = await prisma.transaction.findFirst({
+    select: { uuid: true },
+    where: {
+      fromUser,
+      message,
+      timestamp: { gte: sentAt },
+    },
+  })
+  return existing !== null
+}
+
 export async function storeKarma(
   transactions: Omit<Transaction, 'uuid' | 'total'>[]
 ) {
