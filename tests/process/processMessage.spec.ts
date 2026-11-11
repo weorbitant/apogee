@@ -6,6 +6,7 @@ vi.mock('@/app/_lib/_db/index', () => ({
   storeKarma: vi.fn().mockResolvedValue([]),
   getGivenKarmaLast2Weeks: vi.fn().mockResolvedValue(0),
   getTakenKarmaLast2Weeks: vi.fn().mockResolvedValue(0),
+  isMessageAlreadyProcessed: vi.fn().mockResolvedValue(false),
 }))
 
 vi.mock('@/app/_lib/_slack', () => ({
@@ -14,12 +15,40 @@ vi.mock('@/app/_lib/_slack', () => ({
 }))
 
 import { processMessage } from '@/app/_lib/_process'
-import { getGivenKarmaLast2Weeks, getTakenKarmaLast2Weeks, storeKarma } from '@/app/_lib/_db'
+import { getGivenKarmaLast2Weeks, getTakenKarmaLast2Weeks, isMessageAlreadyProcessed, storeKarma } from '@/app/_lib/_db'
 import { sendSlackMessages } from '@/app/_lib/_slack'
 
 describe('processMessage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+  })
+
+  it('should not store karma nor notify again when Slack redelivers a message that was already processed', async () => {
+    vi.mocked(isMessageAlreadyProcessed).mockResolvedValueOnce(true)
+    await processMessage({
+      channel: 'C123',
+      text: '<@USER22222> +++',
+      user: 'USER11111',
+      ts: '1794409399.889149',
+    })
+    expect(isMessageAlreadyProcessed).toHaveBeenCalledWith(
+      '<@USER11111>',
+      '<@USER22222> +++',
+      new Date(1794409399889)
+    )
+    expect(storeKarma).not.toHaveBeenCalled()
+    expect(sendSlackMessages).not.toHaveBeenCalled()
+  })
+
+  it('should store karma for a message with ts that has not been processed yet', async () => {
+    await processMessage({
+      channel: 'C123',
+      text: '<@USER22222> +++',
+      user: 'USER11111',
+      ts: '1794409399.889149',
+    })
+    expect(storeKarma).toHaveBeenCalledTimes(1)
+    expect(sendSlackMessages).toHaveBeenCalledTimes(1)
   })
 
   it('should process a message given karma to himself and should not store karma and send slack messages correctly', async () => {
