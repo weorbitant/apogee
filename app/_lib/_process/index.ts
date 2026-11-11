@@ -12,6 +12,7 @@ import {
   createUserIfNotExists,
   getGivenKarmaLast2Weeks,
   getTakenKarmaLast2Weeks,
+  isMessageAlreadyProcessed,
   storeKarma,
 } from '@/app/_lib/_db/index'
 import { getUserInfo, sendSlackMessages } from '@/app/_lib/_slack'
@@ -20,6 +21,7 @@ type Event = {
   channel: string
   text: string
   user: string
+  ts?: string
 }
 
 // Examples of matching strings:
@@ -34,7 +36,7 @@ const retrieveProviderId = (user: string) => {
 
 export async function processMessage(event: Event) {
   // TODO remove this logs
-  const { channel, text, user } = event
+  const { channel, text, user, ts } = event
   const now = new Date()
   const fromUser = `<@${user}>`
 
@@ -45,6 +47,15 @@ export async function processMessage(event: Event) {
     )
 
     if (karmaRelatedMatches.length > 0) {
+      // skip messages Slack has already delivered to us
+      if (ts) {
+        const sentAt = new Date(parseFloat(ts) * 1000)
+        if (await isMessageAlreadyProcessed(fromUser, text, sentAt)) {
+          console.log('duplicate delivery ignored', ts)
+          return
+        }
+      }
+
       const transactions: Transaction[] = getTransactions(
         karmaRelatedMatches,
         text,
