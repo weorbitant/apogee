@@ -71,7 +71,6 @@ Make sure to modify the [subscription URL](./README.md/#enable-slack-events) to 
 
 ```sh
 turso auth login
-
 turso db shell apogee-bot-dev < ./prisma/migrations/20241024201506_init/migration.sql
 ```
 
